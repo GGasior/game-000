@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        .game-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: white;
+            padding: 8px 15px;
+            border-bottom: 1px solid #ddd;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .header h1 {
+            font-size: 1.5rem;
+            margin: 0;
+            color: #333;
+        }
+        .logout-btn {
+            background-color: #f44336;
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .main-content {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 60px);
+        }
+        .left-panel {
+            width: 70%;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            background-color: white;
+            border-right: 1px solid #ddd;
+        }
+        .right-panel {
+            width: 30%;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            background-color: white;
+        }
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            background-color: white;
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #ddd;
+        }
+        .status-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .status-label {
+            font-size: 10px;
+            color: #666;
+            font-weight: bold;
+        }
+        .status-value {
+            font-size: 14px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        .map-area {
+            display: flex;
+            flex-grow: 1;
+        }
+        .worker-stats {
+            background-color: white;
+            padding: 12px;
+            border-radius: 4px;
+            margin-right: 15px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #ddd;
+            width: 150px;
+            align-self: stretch;
+        }
+        .worker-stats h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #4CAF50;
+            text-align: center;
+            font-size: 14px;
+        }
+        .stat-item {
+            margin-bottom: 15px;
+        }
+        .stat-item label {
+            display: block;
+            width: 100%;
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+        .stat-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #4CAF50;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .stat-graph {
+            height: 30px;
+            width: 100%;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            overflow: hidden;
+            position: relative;
+        }
+        .stat-graph-line {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: flex-end;
+        }
+        .stat-graph-point {
+            flex: 1;
+            background-color: #4CAF50;
+            opacity: 0.7;
+        }
+        .grid-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1;
+        }
+        .grid-map {
+            aspect-ratio: 1/1;
+            width: 350px;
+            height: 350px;
+            display: grid;
+            grid-template-columns: repeat(15, 1fr);
+            grid-template-rows: repeat(15, 1fr);
+            gap: 2px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+            padding: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #ddd;
+        }
+        .grid-cell {
+            background-color: white;
+            border-radius: 2px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 8px;
+            user-select: none;
+            border: 1px solid #eee;
+            min-width: 15px;
+            min-height: 15px;
+        }
+        .grid-cell:hover {
+            background-color: #f0f0f0;
+            border-color: #4CAF50;
+        }
+        .terminal-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .terminal-header {
+            font-size: 14px;
+            margin-top: 0;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        .terminal {
+            flex-grow: 1;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 8px;
+            color: #333;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .terminal-output {
+            flex-grow: 1;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-bottom: 8px;
+        }
+        .terminal-input {
+            display: flex;
+            border-top: 1px solid #ddd;
+            padding-top: 5px;
+        }
+        .terminal-input span {
+            color: #4CAF50;
+            margin-right: 5px;
+        }
+        .terminal-input input {
+            flex-grow: 1;
+            background-color: transparent;
+            border: none;
+            outline: none;
+            color: #333;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        .hidden {
+            display: none;
+        }
+        #data-controls {
+            margin-top: 15px;
+            background-color: white;
+            padding: 12px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        #data-controls h3 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #333;
+        }
+        #game-data-input {
+            width: 100%;
+            height: 75px;
+            background-color: #f9f9f9;
+            color: #333;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 8px;
+            box-sizing: border-box;
+            resize: vertical;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            margin-top: 8px;
+        }
+        .status {
+            margin-top: 8px;
+            color: #4CAF50;
+            text-align: center;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>Game Dashboard</h1>
+            <div>
+                <span id="username-display">Player</span>
+                <a href="/logout" class="logout-btn">Logout</a>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="status-bar">
+                    <div class="status-item">
+                        <div class="status-label">CASH</div>
+                        <div class="status-value" id="cash-value">$10,000</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">NODE POPULARITY</div>
+                        <div class="status-value" id="popularity-value">0</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">TECHNICAL POINTS</div>
+                        <div class="status-value" id="tech-points-value">50</div>
+                    </div>
+                </div>
+                
+                <div class="map-area">
+                    <div class="worker-stats">
+                        <h3>Network Stats</h3>
+                        <div class="stat-item">
+                            <label>Power s/H</label>
+                            <div class="stat-value" id="power-sh-value">0</div>
+                            <div class="stat-graph">
+                                <div class="stat-graph-line" id="power-sh-graph"></div>
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <label>Popularity</label>
+                            <div class="stat-value" id="popularity-stat-value">0</div>
+                            <div class="stat-graph">
+                                <div class="stat-graph-line" id="popularity-graph"></div>
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <label>Speed</label>
+                            <div class="stat-value" id="speed-value">0</div>
+                            <div class="stat-graph">
+                                <div class="stat-graph-line" id="speed-graph"></div>
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <label>Algorithm Points</label>
+                            <div class="stat-value" id="algorithm-value">0</div>
+                            <div class="stat-graph">
+                                <div class="stat-graph-line" id="algorithm-graph"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid-container">
+                        <div class="grid-map" id="grid-map">
+                            <!-- Grid cells will be dynamically generated -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="right-panel">
+                <div class="terminal-container">
+                    <h3 class="terminal-header">Terminal</h3>
+                    <div class="terminal">
+                        <div class="terminal-output" id="terminal-output">Welcome to the Game Terminal!
+Type 'help' for a list of commands.
+                        </div>
+                        <div class="terminal-input">
+                            <span>></span>
+                            <input type="text" id="terminal-input-field" placeholder="Enter command">
+                        </div>
+                    </div>
+                    
+                    <div class="controls">
+                        <!-- Buttons removed as requested -->
+                    </div>
+                    
+                    <div id="data-controls" class="hidden">
+                        <h3>Game Data (JSON)</h3>
+                        <textarea id="game-data-input" placeholder="Your game data will appear here in JSON format"></textarea>
+                        <div id="status-message" class="status"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/task-simulator.js"></script>
+    <script>
+        // Game state
+        let gameData = {
+            cash: 10000,
+            nodePopularity: 0,
+            techPoints: 50,
+            worker: {
+                intelligence: 60,
+                knowledge: 40,
+                speed: 75,
+                resourcefulness: 55
+            },
+            networkStats: {
+                powerSH: 0,
+                popularity: 0,
+                speed: 0,
+                algorithm: 0,
+                history: {
+                    powerSH: [0],
+                    popularity: [0],
+                    speed: [0],
+                    algorithm: [0]
+                }
+            },
+            map: Array(15).fill().map(() => Array(15).fill(0)),
+            items: {
+                pc: [],
+                server: [],
+                bot: []
+            },
+            terminalHistory: ["Welcome to the Game Terminal!", "Type 'help' for a list of commands."],
+            lastPlayed: null
+        };
+        
+        // Item type mapping for display
+        const ITEM_TYPES = {
+            0: '', // Empty cell
+            1: 'PC',
+            2: 'SRV',
+            3: 'BOT'
+        };
+        
+        // DOM elements
+        const usernameDisplay = document.getElementById('username-display');
+        const gameDataInput = document.getElementById('game-data-input');
+        const statusMessage = document.getElementById('status-message');
+        const gridMap = document.getElementById('grid-map');
+        const terminalOutput = document.getElementById('terminal-output');
+        const terminalInput = document.getElementById('terminal-input-field');
+        const cashValue = document.getElementById('cash-value');
+        const popularityValue = document.getElementById('popularity-value');
+        const techPointsValue = document.getElementById('tech-points-value');
+        
+        // Generate grid
+        function generateGrid() {
+            gridMap.innerHTML = '';
+            for (let y = 0; y < 15; y++) {
+                for (let x = 0; x < 15; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
+                    
+                    const itemType = gameData.map[y][x];
+                    cell.textContent = ITEM_TYPES[itemType] || '';
+                    
+                    // Add special styling for different item types
+                    if (itemType === 1) { // PC
+                        cell.style.backgroundColor = '#e6f7ff';
+                        cell.style.color = '#0066cc';
+                    } else if (itemType === 2) { // Server
+                        cell.style.backgroundColor = '#ffe6e6';
+                        cell.style.color = '#cc0000';
+                    } else if (itemType === 3) { // Bot
+                        cell.style.backgroundColor = '#e6ffe6';
+                        cell.style.color = '#006600';
+                    }
+                    
+                    cell.addEventListener('click', () => handleCellClick(x, y));
+                    gridMap.appendChild(cell);
+                }
+            }
+        }
+        
+        // Find a random empty cell
+        function findEmptyCell() {
+            const emptyCells = [];
+            for (let y = 0; y < 15; y++) {
+                for (let x = 0; x < 15; x++) {
+                    if (gameData.map[y][x] === 0) {
+                        emptyCells.push({ x, y });
+                    }
+                }
+            }
+            
+            if (emptyCells.length === 0) {
+                return null;
+            }
+            
+            // Return a random empty cell
+            return emptyCells[Math.floor(Math.random() * emptyCells.length)];
+        }
+        
+        // Handle cell click
+        function handleCellClick(x, y) {
+            const cellType = gameData.map[y][x];
+            
+            if (cellType === 0) {
+                writeToTerminal(`Clicked on empty cell (${x}, ${y})`);
+            } else if (cellType === 1) {
+                writeToTerminal(`Clicked on PC at (${x}, ${y})`);
+            } else if (cellType === 2) {
+                writeToTerminal(`Clicked on Server at (${x}, ${y})`);
+            } else if (cellType === 3) {
+                writeToTerminal(`Clicked on Bot at (${x}, ${y})`);
+                // If we click on a bot, let the user select where to move it
+                selectBotDestination(x, y);
+            }
+        }
+        
+        // Bot movement selection mode
+        let movingBotPosition = null;
+        
+        function selectBotDestination(x, y) {
+            movingBotPosition = { x, y };
+            writeToTerminal(`Select a destination for the bot at (${x}, ${y})`);
+            writeToTerminal(`Click on an empty cell to move the bot there`);
+            
+            // Highlight the bot cell
+            const cells = document.querySelectorAll('.grid-cell');
+            cells.forEach(cell => {
+                if (parseInt(cell.dataset.x) === x && parseInt(cell.dataset.y) === y) {
+                    cell.style.boxShadow = '0 0 5px 2px #00ff00';
+                }
+            });
+            
+            // Temporarily override the cell click handler
+            const originalHandler = handleCellClick;
+            handleCellClick = (destX, destY) => {
+                if (gameData.map[destY][destX] === 0) {
+                    // Move the bot
+                    gameData.map[destY][destX] = 3; // Set destination as bot
+                    gameData.map[y][x] = 0; // Clear original position
+                    
+                    // Update bot position in the items list
+                    for (let i = 0; i < gameData.items.bot.length; i++) {
+                        const bot = gameData.items.bot[i];
+                        if (bot.x === x && bot.y === y) {
+                            bot.x = destX;
+                            bot.y = destY;
+                            break;
+                        }
+                    }
+                    
+                    writeToTerminal(`Bot moved from (${x}, ${y}) to (${destX}, ${destY})`);
+                    updateUI();
+                    
+                    // Restore original handler
+                    handleCellClick = originalHandler;
+                    movingBotPosition = null;
+                } else {
+                    writeToTerminal(`Cannot move bot to (${destX}, ${destY}). Cell is not empty.`);
+                }
+            };
+        }
+        
+        // Update the game UI from the game data
+        function updateUI() {
+            // Update statistics
+            cashValue.textContent = '$' + gameData.cash.toLocaleString();
+            popularityValue.textContent = gameData.nodePopularity;
+            techPointsValue.textContent = gameData.techPoints;
+            
+            // Update network stats
+            document.getElementById('power-sh-value').textContent = gameData.networkStats.powerSH;
+            document.getElementById('popularity-stat-value').textContent = gameData.networkStats.popularity;
+            document.getElementById('speed-value').textContent = gameData.networkStats.speed;
+            document.getElementById('algorithm-value').textContent = gameData.networkStats.algorithm;
+            
+            // Update network stat graphs
+            updateStatGraph('power-sh-graph', gameData.networkStats.history.powerSH);
+            updateStatGraph('popularity-graph', gameData.networkStats.history.popularity);
+            updateStatGraph('speed-graph', gameData.networkStats.history.speed);
+            updateStatGraph('algorithm-graph', gameData.networkStats.history.algorithm);
+            
+            // Update grid
+            generateGrid();
+            
+            // Update terminal
+            terminalOutput.innerHTML = gameData.terminalHistory.join('\n');
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        }
+        
+        // Update a stat graph with history data
+        function updateStatGraph(graphId, data) {
+            const graphElement = document.getElementById(graphId);
+            graphElement.innerHTML = '';
+            
+            // Find the max value for scaling
+            const maxValue = Math.max(...data, 1);
+            
+            // Limit to last 10 data points if more exist
+            const displayData = data.length > 10 ? data.slice(-10) : data;
+            
+            // Create graph points
+            displayData.forEach(value => {
+                const point = document.createElement('div');
+                point.className = 'stat-graph-point';
+                const heightPercent = (value / maxValue) * 100;
+                point.style.height = `${heightPercent}%`;
+                graphElement.appendChild(point);
+            });
+        }
+        
+        // Add network stats data point (call this periodically to update graphs)
+        function addNetworkStatsDataPoint() {
+            // Generate new values (in a real game, these would be calculated based on game logic)
+            // For demo, we'll just increment them slightly with some randomness
+            gameData.networkStats.powerSH += Math.floor(Math.random() * 5) * (gameData.items.pc.length + 1);
+            gameData.networkStats.popularity += Math.floor(Math.random() * 3) * (gameData.items.server.length + 1);
+            gameData.networkStats.speed += Math.floor(Math.random() * 4) * (gameData.items.bot.length + 1);
+            gameData.networkStats.algorithm += Math.floor(Math.random() * 2) * (gameData.items.pc.length + gameData.items.server.length + 1);
+            
+            // Add current values to history
+            gameData.networkStats.history.powerSH.push(gameData.networkStats.powerSH);
+            gameData.networkStats.history.popularity.push(gameData.networkStats.popularity);
+            gameData.networkStats.history.speed.push(gameData.networkStats.speed);
+            gameData.networkStats.history.algorithm.push(gameData.networkStats.algorithm);
+            
+            // Update UI
+            updateUI();
+        }
+        
+        // Add a stat update to happen when start command is used and periodically after
+        let statUpdateInterval = null;
+        
+        // Modify the start command to update stats periodically
+        function processCommand(command) {
+            const cmd = command.toLowerCase();
+            
+            if (cmd === 'help') {
+                writeToTerminal('Available commands:');
+                writeToTerminal('  help - Show this help');
+                writeToTerminal('  stats - Show your current stats');
+                writeToTerminal('  clear - Clear the terminal');
+                writeToTerminal('  data - Toggle data view');
+                writeToTerminal('  add pc - Add a PC (cost: $100)');
+                writeToTerminal('  add server - Add a server (cost: $300)');
+                writeToTerminal('  add bot - Add a bot (cost: $500)');
+                writeToTerminal('  start - Start your services');
+                writeToTerminal('  stop - Stop your services');
+            } else if (cmd === 'stats') {
+                writeToTerminal(`Cash: $${gameData.cash}`);
+                writeToTerminal(`Node Popularity: ${gameData.nodePopularity}`);
+                writeToTerminal(`Technical Points: ${gameData.techPoints}`);
+                writeToTerminal('Worker Stats:');
+                writeToTerminal(`  Intelligence: ${gameData.worker.intelligence}%`);
+                writeToTerminal(`  Knowledge: ${gameData.worker.knowledge}%`);
+                writeToTerminal(`  Speed: ${gameData.worker.speed}%`);
+                writeToTerminal(`  Resourcefulness: ${gameData.worker.resourcefulness}%`);
+                writeToTerminal('Network Items:');
+                writeToTerminal(`  PCs: ${gameData.items.pc.length}`);
+                writeToTerminal(`  Servers: ${gameData.items.server.length}`);
+                writeToTerminal(`  Bots: ${gameData.items.bot.length}`);
+            } else if (cmd === 'clear') {
+                gameData.terminalHistory = [];
+                writeToTerminal('Terminal cleared.');
+            } else if (cmd === 'data') {
+                const dataControls = document.getElementById('data-controls');
+                dataControls.classList.toggle('hidden');
+                updateGameDataDisplay();
+            } else if (cmd === 'add pc') {
+                if (gameData.cash >= 100) {
+                    const emptyCell = findEmptyCell();
+                    if (emptyCell) {
+                        gameData.cash -= 100;
+                        
+                        // Place a PC on the map (item type 1)
+                        const { x, y } = emptyCell;
+                        gameData.map[y][x] = 1;
+                        
+                        // Add to items list
+                        gameData.items.pc.push({ x, y });
+                        
+                        writeToTerminal(`PC added to your network at position (${x}, ${y}). $100 deducted from your account.`);
+                        writeToTerminal('Your remaining balance: $' + gameData.cash);
+                        updateUI();
+                    } else {
+                        writeToTerminal('No empty cells available on the map. Clear some space first.');
+                    }
+                } else {
+                    writeToTerminal('Insufficient funds. You need $100 to add a PC.');
+                }
+            } else if (cmd === 'add server') {
+                if (gameData.cash >= 300) {
+                    const emptyCell = findEmptyCell();
+                    if (emptyCell) {
+                        gameData.cash -= 300;
+                        
+                        // Place a Server on the map (item type 2)
+                        const { x, y } = emptyCell;
+                        gameData.map[y][x] = 2;
+                        
+                        // Add to items list
+                        gameData.items.server.push({ x, y });
+                        
+                        writeToTerminal(`Server added to your network at position (${x}, ${y}). $300 deducted from your account.`);
+                        writeToTerminal('Your remaining balance: $' + gameData.cash);
+                        updateUI();
+                    } else {
+                        writeToTerminal('No empty cells available on the map. Clear some space first.');
+                    }
+                } else {
+                    writeToTerminal('Insufficient funds. You need $300 to add a server.');
+                }
+            } else if (cmd === 'add bot') {
+                if (gameData.cash >= 500) {
+                    const emptyCell = findEmptyCell();
+                    if (emptyCell) {
+                        gameData.cash -= 500;
+                        
+                        // Place a Bot on the map (item type 3)
+                        const { x, y } = emptyCell;
+                        gameData.map[y][x] = 3;
+                        
+                        // Add to items list with bot properties
+                        gameData.items.bot.push({ 
+                            x, y,
+                            efficiency: Math.floor(Math.random() * 30) + 40, // 40-70%
+                            active: false
+                        });
+                        
+                        writeToTerminal(`Bot added to your network at position (${x}, ${y}). $500 deducted from your account.`);
+                        writeToTerminal('Your remaining balance: $' + gameData.cash);
+                        writeToTerminal('Click on the bot to move it to a different location.');
+                        updateUI();
+                    } else {
+                        writeToTerminal('No empty cells available on the map. Clear some space first.');
+                    }
+                } else {
+                    writeToTerminal('Insufficient funds. You need $500 to add a bot.');
+                }
+            } else if (cmd === 'start') {
+                writeToTerminal('Starting all services...');
+                
+                // Activate all bots
+                gameData.items.bot.forEach(bot => {
+                    bot.active = true;
+                });
+                
+                // Start periodic stat updates
+                if (statUpdateInterval) {
+                    clearInterval(statUpdateInterval);
+                }
+                statUpdateInterval = setInterval(addNetworkStatsDataPoint, 5000); // Update every 5 seconds
+                
+                // Add initial data point
+                addNetworkStatsDataPoint();
+                
+                writeToTerminal('Services started. Your network is now active.');
+                writeToTerminal('All bots have been activated and will generate resources.');
+                writeToTerminal('Network statistics will update periodically.');
+                
+                // Check if we have PCs and bots on the map to offer task simulation
+                if (gameData.items.pc.length > 0 && gameData.items.bot.length > 0) {
+                    writeToTerminal('Detected PCs and bots on the map. Task simulation available.');
+                    writeToTerminal('Use "sim start" to begin task simulation.');
+                    writeToTerminal('Use "sim help" for more commands.');
+                }
+            } else if (cmd === 'stop') {
+                writeToTerminal('Stopping all services...');
+                
+                // Deactivate all bots
+                gameData.items.bot.forEach(bot => {
+                    bot.active = false;
+                });
+                
+                // Stop periodic stat updates
+                if (statUpdateInterval) {
+                    clearInterval(statUpdateInterval);
+                    statUpdateInterval = null;
+                }
+                
+                writeToTerminal('Services stopped. Your network is now inactive.');
+                writeToTerminal('All bots have been deactivated.');
+                writeToTerminal('Network statistics updates paused.');
+            } else {
+                writeToTerminal(`Unknown command: ${command}`);
+            }
+        }
+        
+        // Update the display of game data
+        function updateGameDataDisplay() {
+            gameDataInput.value = JSON.stringify(gameData, null, 2);
+        }
+        
+        // Write to terminal
+        function writeToTerminal(message) {
+            gameData.terminalHistory.push(message);
+            if (gameData.terminalHistory.length > 100) {
+                gameData.terminalHistory.shift();
+            }
+            terminalOutput.innerHTML = gameData.terminalHistory.join('\n');
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        }
+        
+        // Terminal command handler
+        terminalInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const command = terminalInput.value.trim();
+                if (command) {
+                    writeToTerminal(`> ${command}`);
+                    processCommand(command);
+                    terminalInput.value = '';
+                }
+            }
+        });
+        
+        // Initialize the game
+        async function init() {
+            try {
+                // Fetch the user's game data
+                const response = await fetch('/api/game-data');
+                const data = await response.json();
+                
+                if (data.success) {
+                    // If the user has saved game data, use it
+                    if (data.gameData && Object.keys(data.gameData).length > 0) {
+                        // Create a new object with default values
+                        const defaultData = {
+                            cash: 10000,
+                            nodePopularity: 0,
+                            techPoints: 50,
+                            worker: {
+                                intelligence: 60,
+                                knowledge: 40,
+                                speed: 75,
+                                resourcefulness: 55
+                            },
+                            networkStats: {
+                                powerSH: 0,
+                                popularity: 0,
+                                speed: 0,
+                                algorithm: 0,
+                                history: {
+                                    powerSH: [0],
+                                    popularity: [0],
+                                    speed: [0],
+                                    algorithm: [0]
+                                }
+                            },
+                            map: Array(15).fill().map(() => Array(15).fill(0)),
+                            items: {
+                                pc: [],
+                                server: [],
+                                bot: []
+                            },
+                            terminalHistory: ["Welcome to the Game Terminal!", "Type 'help' for a list of commands."],
+                            lastPlayed: null
+                        };
+                        
+                        // Merge with saved data
+                        gameData = { ...defaultData, ...data.gameData };
+                        
+                        // Ensure map is properly structured as 15x15 grid
+                        if (!Array.isArray(gameData.map) || gameData.map.length !== 15) {
+                            gameData.map = Array(15).fill().map(() => Array(15).fill(0));
+                        } else {
+                            // Make sure each row is properly initialized
+                            for (let i = 0; i < 15; i++) {
+                                if (!Array.isArray(gameData.map[i]) || gameData.map[i].length !== 15) {
+                                    gameData.map[i] = Array(15).fill(0);
+                                }
+                            }
+                        }
+                        
+                        // Ensure items structure exists
+                        gameData.items = gameData.items || {
+                            pc: [],
+                            server: [],
+                            bot: []
+                        };
+                        
+                        // Ensure other properties exist
+                        gameData.worker = gameData.worker || {
+                            intelligence: 60,
+                            knowledge: 40,
+                            speed: 75,
+                            resourcefulness: 55
+                        };
+                        gameData.terminalHistory = gameData.terminalHistory || ["Welcome to the Game Terminal!", "Type 'help' for a list of commands."];
+                    }
+                }
+                
+                // Update the game UI
+                updateUI();
+                
+                // Initialize task simulator events after the game is loaded
+                if (window.TaskSimulator) {
+                    // Modify the process command function to handle simulator commands
+                    processCommand = window.TaskSimulator.addCommands(gameData, processCommand);
+                    processCommand = window.TaskSimulator.updateHelp(processCommand);
+                    
+                    // Initialize task simulator
+                    window.TaskSimulator.init(gameData);
+                }
+                
+            } catch (error) {
+                console.error('Error initializing game:', error);
+                writeToTerminal('Error initializing game: ' + error.message);
+            }
+        }
+        
+        // Show status message
+        function showStatus(message, isError = false) {
+            statusMessage.textContent = message;
+            statusMessage.style.color = isError ? '#f44336' : '#4CAF50';
+            
+            // Clear the message after 3 seconds
+            setTimeout(() => {
+                statusMessage.textContent = '';
+            }, 3000);
+        }
+        
+        // Initialize the game when the page loads
+        window.addEventListener('load', init);
+        
+        // Generate initial grid
+        generateGrid();
+    </script>
+</body>
+</html> 
